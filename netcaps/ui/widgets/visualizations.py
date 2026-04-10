@@ -159,12 +159,12 @@ if HAS_QT:
                 painter.drawText(2, y + bar_h - 2, label[:18])
                 painter.drawText(margin_left + bar_w + 4, y + bar_h - 2, _fmt_bytes(val))
 
-    def _fmt_bytes(n: int) -> str:
+    def _fmt_bytes(n: float) -> str:
         for unit in ("B", "KB", "MB", "GB"):
             if n < 1024:
-                return f"{n:.0f}{unit}"
-            n //= 1024
-        return f"{n:.0f}TB"
+                return f"{n:.1f}{unit}"
+            n /= 1024
+        return f"{n:.1f}TB"
 
     class VisualizationWidget(QWidget):
         def __init__(self, parent=None):

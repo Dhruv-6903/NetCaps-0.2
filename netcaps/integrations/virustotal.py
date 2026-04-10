@@ -17,7 +17,7 @@ except ImportError:
     HAS_QT = False
 
 _VT_API_BASE = "https://www.virustotal.com/api/v3"
-_RATE_LIMIT_INTERVAL = 15.5  # 4 requests/minute = 1 per 15s
+_RATE_LIMIT_INTERVAL = 15.0  # 4 requests/minute = 1 per 15s
 
 
 class VirusTotalClient:
