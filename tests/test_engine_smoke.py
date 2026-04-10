@@ -7,7 +7,8 @@ try:
 except Exception:  # pragma: no cover
     dpkt = None
 
-from netcaps.engine import ProcessingEngine
+if dpkt is not None:
+    from netcaps.engine import ProcessingEngine
 
 
 @unittest.skipIf(dpkt is None, "dpkt not installed")
@@ -30,7 +31,7 @@ class EngineSmokeTests(unittest.TestCase):
             base = Path(tmp)
             pcap = base / "a.pcap"
             self._make_pcap(pcap)
-            eng = ProcessingEngine(output_dir=base / "extracted")
+            eng = ProcessingEngine(output_dir=base / "extracted")  # type: ignore[name-defined]
             store = eng.process_file(pcap)
             store = eng.finalize()
             self.assertGreaterEqual(len(store.hosts), 2)

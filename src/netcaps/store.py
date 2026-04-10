@@ -17,7 +17,8 @@ from .models import (
 
 
 class CaseStore:
-    def __init__(self) -> None:
+    def __init__(self, max_events: int = 500000) -> None:
+        self.max_events = max_events
         self.hosts: dict[str, HostRecord] = {}
         self.sessions: dict[tuple[str, str, int, int, str], SessionRecord] = {}
         self.dns: list[DNSRecord] = []
@@ -57,6 +58,10 @@ class CaseStore:
         self.search_rows[tab].append(self._flatten(item).lower())
 
     def add_timeline(self, event: TimelineEvent) -> None:
+        if len(self.timeline) >= self.max_events:
+            self.timeline.pop(0)
+            if self.search_rows.get("timeline"):
+                self.search_rows["timeline"].pop(0)
         self.timeline.append(event)
         self._add_search_row("timeline", event)
 
@@ -68,6 +73,8 @@ class CaseStore:
         self.sessions[session.key] = session
 
     def add_dns(self, rec: DNSRecord) -> None:
+        if len(self.dns) >= self.max_events:
+            return
         idx = len(self.dns)
         self.dns.append(rec)
         self.index_ip[rec.src_ip].add(idx)
@@ -76,6 +83,8 @@ class CaseStore:
             self.index_domain_substring[token].add(idx)
 
     def add_file(self, rec: FileRecord) -> None:
+        if len(self.files) >= self.max_events:
+            return
         idx = len(self.files)
         self.files.append(rec)
         self._add_search_row("files", rec)
@@ -83,6 +92,8 @@ class CaseStore:
             self.index_filename[token].add(idx)
 
     def add_credential(self, rec: CredentialRecord) -> None:
+        if len(self.credentials) >= self.max_events:
+            return
         idx = len(self.credentials)
         self.credentials.append(rec)
         self._add_search_row("credentials", rec)
@@ -90,10 +101,14 @@ class CaseStore:
             self.index_username[token].add(idx)
 
     def add_alert(self, rec: AlertRecord) -> None:
+        if len(self.alerts) >= self.max_events:
+            return
         self.alerts.append(rec)
         self._add_search_row("alerts", rec)
 
     def add_email(self, rec: EmailRecord) -> None:
+        if len(self.email) >= self.max_events:
+            return
         self.email.append(rec)
         self._add_search_row("email", rec)
 

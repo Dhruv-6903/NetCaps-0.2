@@ -20,6 +20,12 @@ class StoreFilterTests(unittest.TestCase):
         self.assertEqual(idx.query("hello"), [0])
         self.assertEqual(idx.query(""), [0, 1])
 
+    def test_store_max_events_guard(self) -> None:
+        store = CaseStore(max_events=1)
+        store.add_dns(DNSRecord(1.0, "1.1.1.1", "a.com", "1", "0"))
+        store.add_dns(DNSRecord(2.0, "1.1.1.1", "b.com", "1", "0"))
+        self.assertEqual(len(store.dns), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,12 +23,16 @@ class ProcessingEngine:
         output_dir: str | Path = "extracted",
         enrichment: Enrichment | None = None,
         batch_interval_packets: int = 200,
+        max_stream_chunks_per_session: int = 512,
+        max_stream_chunk_bytes: int = 16384,
     ) -> None:
         self.store = case_store or CaseStore()
         self.enrichment = enrichment or Enrichment()
         self.extractor = ArtifactExtractor(self.store, Path(output_dir))
         self.alerts = AlertEngine(self.store)
         self.batch_interval_packets = max(10, batch_interval_packets)
+        self.max_stream_chunks_per_session = max(16, max_stream_chunks_per_session)
+        self.max_stream_chunk_bytes = max(256, max_stream_chunk_bytes)
 
     def process_file(self, pcap_path: str | Path, on_batch: ProgressCb | None = None) -> CaseStore:
         for i, pkt in enumerate(iter_packets(pcap_path), start=1):
@@ -118,7 +122,9 @@ class ProcessingEngine:
             sess.tcp_ack_seen = sess.tcp_ack_seen or bool(getattr(data, "flags", 0) & dpkt.tcp.TH_ACK)
             sess.tcp_fin_seen = sess.tcp_fin_seen or bool(getattr(data, "flags", 0) & dpkt.tcp.TH_FIN)
         if payload:
-            sess.stream_chunks.append((ts, direction, payload[:16384]))
+            if len(sess.stream_chunks) >= self.max_stream_chunks_per_session:
+                sess.stream_chunks.pop(0)
+            sess.stream_chunks.append((ts, direction, payload[: self.max_stream_chunk_bytes]))
         self.store.upsert_session(sess)
 
         if proto_name == "UDP" and (src_port == 53 or dst_port == 53):
